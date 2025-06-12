@@ -341,12 +341,12 @@ if __name__ == "__main__":
     print(f"Probability that d′ (Easy Complex) > d′ (Easy Simple) for participant 10: {prob:.2f}")
     
     # Only check participants 4, 6, 8, 10 (indices 3, 5, 7, 9)
-    participant_indices = [3, 5, 7, 9]
+    participant_indices = [3, 5, 7, 9]  # participants 4, 6, 8, 10
     criterion = trace.posterior['criterion']  # shape: (chains, draws, P, C)
     mean_criterion_hard_simple = criterion[:, :, :, 2].mean(dim=("chain", "draw")).values  # shape: (P,)
     subset_criteria = mean_criterion_hard_simple[participant_indices]
     min_idx = subset_criteria.argmin()
-    most_liberal_pnum = participant_indices[min_idx] + 1  # Convert back to participant number
+    most_liberal_pnum = participant_indices[min_idx] + 1
     print(f"Among participants 4, 6, 8, 10, the most liberal in Hard Simple is: {most_liberal_pnum} (criterion={subset_criteria[min_idx]:.2f})")
     
     from sdt_ddm import read_data, draw_delta_plots
