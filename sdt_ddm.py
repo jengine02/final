@@ -314,6 +314,38 @@ def draw_delta_plots(data, pnum):
 
 # Main execution
 if __name__ == "__main__":
-    file_to_print = Path(__file__).parent / 'README.md'
-    with open(file_to_print, 'r') as file:
-        print(file.read())
+    # Load and preprocess SDT-formatted data
+    data = read_data("data.csv", prepare_for="sdt", display=True)
+    
+    # Build and sample from the hierarchical SDT model
+    model = apply_hierarchical_sdt_model(data)
+    
+    with model:
+        trace = pm.sample(1000, tune=1000, chains=2, target_accept=0.9, target_accept_prob=0.9, return_inferencedata=True)
+
+    # Analyze d′ difference for participant 10 (index 9)
+    d_prime = trace.posterior['d_prime']  # shape: (chains, draws, P, C)
+
+    # For participant 10 (index 9), Easy Simple (cond 0) vs Hard Complex (cond 3)
+    d_easy_simple = d_prime[:, :, 9, 0].values.flatten()
+    d_hard_complex = d_prime[:, :, 9, 3].values.flatten()
+    diff = d_easy_simple - d_hard_complex
+    print(f"Mean difference in d′ (Easy Simple - Hard Complex) for participant 10: {diff.mean():.2f}")
+    print(f"95% credible interval: [{np.percentile(diff, 2.5):.2f}, {np.percentile(diff, 97.5):.2f}]")
+
+    
+    # For participant 10 (index 9), Easy Complex (cond 1) vs Easy Simple (cond 0)
+    d_complex = d_prime[:, :, 9, 1].values.flatten()
+    d_simple = d_prime[:, :, 9, 0].values.flatten()
+    prob = np.mean(d_complex > d_simple)
+    print(f"Probability that d′ (Easy Complex) > d′ (Easy Simple) for participant 10: {prob:.2f}")
+    
+    # Only check participants 4, 6, 8, 10 (indices 3, 5, 7, 9)
+    participant_indices = [3, 5, 7, 9]
+    criterion = trace.posterior['criterion']  # shape: (chains, draws, P, C)
+    mean_criterion_hard_simple = criterion[:, :, :, 2].mean(dim=("chain", "draw")).values  # shape: (P,)
+    subset_criteria = mean_criterion_hard_simple[participant_indices]
+    min_idx = subset_criteria.argmin()
+    most_liberal_pnum = participant_indices[min_idx] + 1  # Convert back to participant number
+    print(f"Among participants 4, 6, 8, 10, the most liberal in Hard Simple is: {most_liberal_pnum} (criterion={subset_criteria[min_idx]:.2f})")
+
