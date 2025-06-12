@@ -348,4 +348,10 @@ if __name__ == "__main__":
     min_idx = subset_criteria.argmin()
     most_liberal_pnum = participant_indices[min_idx] + 1  # Convert back to participant number
     print(f"Among participants 4, 6, 8, 10, the most liberal in Hard Simple is: {most_liberal_pnum} (criterion={subset_criteria[min_idx]:.2f})")
+    
+    from sdt_ddm import read_data, draw_delta_plots
+    # Prepare data for delta plots
+    dp_data = read_data("data.csv", prepare_for="delta plots")
+    # Draw delta plots for Participant 1
+    draw_delta_plots(dp_data, pnum=1)
 
